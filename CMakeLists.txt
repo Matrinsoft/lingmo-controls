@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.21)
 cmake_policy(SET CMP0077 NEW)
 cmake_policy(SET CMP0092 NEW)
 cmake_policy(SET CMP0128 NEW)
-qt_policy(SET QTP0001 NEW)
 
 project(LingmoControls
     VERSION 1.0.0
