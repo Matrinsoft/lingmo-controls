@@ -10,7 +10,7 @@ set(public_headers
 )
 
 set(sources
-    src/LingmoControls/LingmoControlsPlugin.cpp
+    LingmoControls/LingmoControlsPlugin.cpp
 )
 
 set(qml_dir ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls)
