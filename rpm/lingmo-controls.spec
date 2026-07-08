@@ -48,8 +48,7 @@ Development headers, CMake config, and pkg-config files for lingmo-controls.
 %install
 %cmake_install
 
-%check
-%ctest
+# tests run in CI
 
 %files
 %license LICENSE
