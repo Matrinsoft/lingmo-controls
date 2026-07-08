@@ -54,13 +54,10 @@ Development headers, CMake config, and pkg-config files for lingmo-controls.
 %license LICENSE
 %doc README.md CHANGELOG.md
 %{_libdir}/qt6/qml/Lingmo/Controls/
-%{_libdir}/cmake/LingmoControls/
-%{_libdir}/libLingmoControls.so.*
 
 %files devel
 %{_includedir}/LingmoControls/
-%{_libdir}/libLingmoControls.so
-%{_libdir}/cmake/LingmoControls/*.cmake
+%{_libdir}/cmake/LingmoControls/
 
 %changelog
 * Tue Jun 30 2026 Lingmo Desktop Team <team@lingmo.org> - 1.0.0-1
