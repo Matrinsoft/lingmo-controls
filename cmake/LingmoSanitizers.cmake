@@ -1,0 +1,8 @@
+if(LINGMO_ENABLE_SANITIZERS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        add_compile_options(-fsanitize=address -fsanitize=undefined)
+        add_link_options(-fsanitize=address -fsanitize=undefined)
+    elseif(MSVC)
+        add_compile_options(/fsanitize=address)
+    endif()
+endif()

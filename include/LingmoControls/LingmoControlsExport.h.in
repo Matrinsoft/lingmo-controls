@@ -1,0 +1,13 @@
+#pragma once
+
+#ifndef LINGMOCONTROLS_EXPORT
+#  ifdef LINGMOCONTROLS_STATIC
+#    define LINGMOCONTROLS_EXPORT
+#  else
+#    ifdef LINGMOCONTROLS_LIBRARY
+#      define LINGMOCONTROLS_EXPORT Q_DECL_EXPORT
+#    else
+#      define LINGMOCONTROLS_EXPORT Q_DECL_IMPORT
+#    endif
+#  endif
+#endif

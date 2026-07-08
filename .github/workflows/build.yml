@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm64]
+        config: [Debug, Release]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            cmake ninja-build \
+            qt6-base-dev qt6-declarative-dev qt6-quickcontrols2-dev \
+            libgl1-mesa-dev
+
+      - name: Build lingmo-theme
+        run: |
+          git clone --depth=1 https://github.com/LingmoOS/lingmo-theme.git
+          cmake -S lingmo-theme -B lingmo-theme/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
+          cmake --build lingmo-theme/build
+          cmake --install lingmo-theme/build
+
+      - name: Configure
+        run: >
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+          -DCMAKE_PREFIX_PATH=${{ github.workspace }}/install
+          -DBUILD_TESTING=ON
+          -DBUILD_EXAMPLES=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-${{ matrix.config }}
+          path: build/
+          retention-days: 7

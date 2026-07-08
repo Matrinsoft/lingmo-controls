@@ -1,0 +1,56 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            cmake ninja-build \
+            qt6-base-dev qt6-declarative-dev qt6-quickcontrols2-dev \
+            xvfb libgl1-mesa-dev
+
+      - name: Build lingmo-theme
+        run: |
+          git clone --depth=1 https://github.com/LingmoOS/lingmo-theme.git
+          cmake -S lingmo-theme -B lingmo-theme/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install \
+            -DBUILD_TESTING=ON
+          cmake --build lingmo-theme/build
+          cmake --install lingmo-theme/build
+
+      - name: Configure & Build
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/install \
+            -DBUILD_TESTING=ON
+          cmake --build build
+
+      - name: Run Tests
+        run: |
+          cd build
+          xvfb-run ctest --output-on-failure --parallel 2
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/Testing/
+          retention-days: 14

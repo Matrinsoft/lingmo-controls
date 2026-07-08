@@ -1,0 +1,34 @@
+Source: lingmo-controls
+Section: libs
+Priority: optional
+Maintainer: Lingmo OS Team <team@lingmo.org>
+Build-Depends: debhelper-compat (= 13),
+               cmake (>= 3.21),
+               qt6-base-dev (>= 6.5),
+               qt6-declarative-dev (>= 6.5),
+               qt6-quickcontrols2-dev (>= 6.5),
+               lingmo-theme-dev (>= 1.0.0)
+Standards-Version: 4.6.2
+Homepage: https://lingmo.org
+Rules-Requires-Root: no
+
+Package: qml6-module-lingmo-controls
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         qml6-module-lingmo-theme (>= 1.0.0)
+Description: Lingmo Desktop - QML Controls Library
+ A set of QML controls for the Lingmo Desktop that uses Lingmo.Theme
+ for all visual properties. Provides Button, TextField, CheckBox,
+ RadioButton, Switch, Slider, ProgressBar, ScrollBar, Menu, Dialog,
+ and ToolButton components.
+
+Package: lingmo-controls-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: qml6-module-lingmo-controls (= ${binary:Version}),
+         ${misc:Depends}
+Description: Lingmo Desktop - QML Controls Library (development files)
+ Development headers and CMake integration for lingmo-controls.

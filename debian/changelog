@@ -1,0 +1,7 @@
+lingmo-controls (1.0.0) unstable; urgency=medium
+
+  * Initial release.
+  * 11 QML controls backed by Lingmo.Theme design tokens.
+  * QML module URI: Lingmo.Controls.
+
+ -- Lingmo OS Team <team@lingmo.org>  Wed, 08 Jul 2026 17:25:00 +0000

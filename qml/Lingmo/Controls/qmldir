@@ -1,0 +1,29 @@
+module Lingmo.Controls
+plugin LingmoControls
+
+BusyIndicator 1.0 BusyIndicator.qml
+Button 1.0 Button.qml
+CheckBox 1.0 CheckBox.qml
+ComboBox 1.0 ComboBox.qml
+DelayButton 1.0 DelayButton.qml
+Dial 1.0 Dial.qml
+Dialog 1.0 Dialog.qml
+GroupBox 1.0 GroupBox.qml
+Menu 1.0 Menu.qml
+PageIndicator 1.0 PageIndicator.qml
+ProgressBar 1.0 ProgressBar.qml
+RadioButton 1.0 RadioButton.qml
+RangeSlider 1.0 RangeSlider.qml
+ScrollBar 1.0 ScrollBar.qml
+ScrollView 1.0 ScrollView.qml
+Slider 1.0 Slider.qml
+SpinBox 1.0 SpinBox.qml
+Switch 1.0 Switch.qml
+TabBar 1.0 TabBar.qml
+TabButton 1.0 TabButton.qml
+TextArea 1.0 TextArea.qml
+TextField 1.0 TextField.qml
+ToolBar 1.0 ToolBar.qml
+ToolButton 1.0 ToolButton.qml
+ToolTip 1.0 ToolTip.qml
+Tumbler 1.0 Tumbler.qml

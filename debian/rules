@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DBUILD_TESTING=ON \
+		-DBUILD_EXAMPLES=OFF
+
+override_dh_auto_test:
+	dh_auto_test --parallel

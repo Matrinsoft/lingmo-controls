@@ -1,0 +1,93 @@
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.impl as Impl
+import Lingmo.Theme
+
+T.CheckBox {
+    id: control
+
+    implicitWidth: implicitIndicatorWidth + leftPadding + implicitContentWidth + rightPadding
+    implicitHeight: Math.max(implicitIndicatorHeight + topPadding + bottomPadding,
+                             implicitContentHeight + topPadding + bottomPadding)
+
+    topPadding: Theme.metrics.spacingSmall
+    bottomPadding: Theme.metrics.spacingSmall
+    leftPadding: control.mirrored ? Theme.metrics.spacingSmall : Theme.metrics.spacingMedium
+    rightPadding: control.mirrored ? Theme.metrics.spacingMedium : Theme.metrics.spacingSmall
+    spacing: Theme.metrics.spacingSmall
+
+    font: Theme.typography.fontByRole(Theme.typography.FontRole.Body)
+
+    indicator: Rectangle {
+        implicitWidth: Theme.metrics.spacingLarge
+        implicitHeight: Theme.metrics.spacingLarge
+
+        x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+
+        radius: Theme.metrics.radiusXXSmall
+        color: {
+            if (!control.enabled)
+                return control.checkState === Qt.Unchecked ? Theme.palette.surface : Theme.palette.accent
+            if (control.pressed)
+                return control.checkState === Qt.Unchecked ? Qt.lighter(Theme.palette.surface, 1.05)
+                                                          : Qt.darker(Theme.palette.accent, 1.1)
+            if (control.hovered)
+                return control.checkState === Qt.Unchecked ? Qt.lighter(Theme.palette.surface, 1.02)
+                                                          : Qt.lighter(Theme.palette.accent, 1.05)
+            if (control.checkState !== Qt.Unchecked)
+                return Theme.palette.accent
+            return Theme.palette.surface
+        }
+
+        border {
+            width: control.checkState !== Qt.Unchecked ? 0 : (control.visualFocus ? 2 : 1)
+            color: {
+                if (!control.enabled)
+                    return Theme.palette.border
+                if (control.visualFocus)
+                    return Theme.palette.accent
+                if (control.hovered)
+                    return Theme.palette.borderHover
+                return Theme.palette.border
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: Theme.animation("fast").duration }
+        }
+
+        Rectangle {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: parent.width * 0.5
+            height: parent.height * 0.5
+            radius: 1
+            visible: control.checkState === Qt.PartiallyChecked
+            color: control.enabled ? Theme.palette.accentForeground : Theme.palette.foreground
+        }
+
+        Rectangle {
+            x: parent.width * 0.15
+            y: parent.height * 0.35
+            width: parent.width * 0.75
+            height: parent.height * 0.3
+            visible: control.checkState === Qt.Checked
+            color: "transparent"
+            border {
+                width: 2
+                color: control.enabled ? Theme.palette.accentForeground : Theme.palette.foreground
+            }
+        }
+    }
+
+    contentItem: Text {
+        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+        text: control.text
+        font: control.font
+        color: control.enabled ? Theme.palette.foreground : Theme.palette.foreground
+        elide: Text.ElideRight
+        verticalAlignment: Text.AlignVCenter
+    }
+}
