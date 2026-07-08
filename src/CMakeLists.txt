@@ -65,7 +65,7 @@ target_include_directories(${module_name}
 
 target_link_libraries(${module_name}
     PUBLIC
-        Lingmo::Theme
+        Lingmo::LingmoTheme
     PRIVATE
         Qt6::Core
         Qt6::Gui

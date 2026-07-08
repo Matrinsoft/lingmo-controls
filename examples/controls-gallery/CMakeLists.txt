@@ -15,7 +15,7 @@ target_link_libraries(controls-gallery
         Qt6::Quick
         Qt6::QuickControls2
         Qt6::Widgets
-        Lingmo::Theme
+        Lingmo::LingmoTheme
         LingmoControls
 )
 
