@@ -54,6 +54,7 @@ qt_add_qml_module(${module_name}
     QML_FILES ${qml_files}
     SOURCES
         ${sources}
+    OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml/Lingmo/Controls"
 )
 
 target_include_directories(${module_name}

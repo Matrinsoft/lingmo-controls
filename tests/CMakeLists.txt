@@ -4,11 +4,13 @@ set(CMAKE_AUTOMOC ON)
 qt_policy(SET QTP0001 NEW)
 
 function(add_qml_test name)
+    set(test_outdir "${CMAKE_BINARY_DIR}/qml/Lingmo/Controls/tst/${name}")
     qt_add_qml_module(${name}
         URI Lingmo.Controls.tst.${name}
         VERSION 1.0
         QML_FILES ${name}.qml
         IMPORTS Lingmo.Controls
+        OUTPUT_DIRECTORY ${test_outdir}
     )
     target_link_libraries(${name} PRIVATE Qt6::QuickTest)
     add_test(NAME ${name} COMMAND ${name})
