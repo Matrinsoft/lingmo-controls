@@ -13,36 +13,45 @@ set(sources
     src/LingmoControls/LingmoControlsPlugin.cpp
 )
 
+set(qml_dir ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls)
+set(qml_files
+    ${qml_dir}/BusyIndicator.qml
+    ${qml_dir}/Button.qml
+    ${qml_dir}/CheckBox.qml
+    ${qml_dir}/ComboBox.qml
+    ${qml_dir}/DelayButton.qml
+    ${qml_dir}/Dial.qml
+    ${qml_dir}/Dialog.qml
+    ${qml_dir}/GroupBox.qml
+    ${qml_dir}/Menu.qml
+    ${qml_dir}/PageIndicator.qml
+    ${qml_dir}/ProgressBar.qml
+    ${qml_dir}/RadioButton.qml
+    ${qml_dir}/RangeSlider.qml
+    ${qml_dir}/ScrollBar.qml
+    ${qml_dir}/ScrollView.qml
+    ${qml_dir}/Slider.qml
+    ${qml_dir}/SpinBox.qml
+    ${qml_dir}/Switch.qml
+    ${qml_dir}/TabBar.qml
+    ${qml_dir}/TabButton.qml
+    ${qml_dir}/TextArea.qml
+    ${qml_dir}/TextField.qml
+    ${qml_dir}/ToolBar.qml
+    ${qml_dir}/ToolButton.qml
+    ${qml_dir}/ToolTip.qml
+    ${qml_dir}/Tumbler.qml
+)
+
+foreach(f ${qml_files})
+    get_filename_component(name ${f} NAME)
+    set_source_files_properties(${f} PROPERTIES QT_RESOURCE_ALIAS ${name})
+endforeach()
+
 qt_add_qml_module(${module_name}
     URI Lingmo.Controls
     VERSION 1.0
-    QML_FILES
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/BusyIndicator.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Button.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/CheckBox.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/ComboBox.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/DelayButton.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Dial.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Dialog.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/GroupBox.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Menu.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/PageIndicator.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/ProgressBar.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/RadioButton.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/RangeSlider.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/ScrollBar.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/ScrollView.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Slider.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/SpinBox.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Switch.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/TabBar.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/TabButton.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/TextArea.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/TextField.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/ToolBar.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/ToolButton.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/ToolTip.qml
-        ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Tumbler.qml
+    QML_FILES ${qml_files}
     SOURCES
         ${sources}
 )
