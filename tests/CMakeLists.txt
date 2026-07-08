@@ -1,16 +1,10 @@
 find_package(Qt6 REQUIRED COMPONENTS QuickTest)
 
-function(add_qml_test name)
-    qt_add_executable(${name}
-        ${name}.qml
-    )
-    target_link_libraries(${name} PRIVATE Qt6::QuickTest)
-    add_test(NAME ${name} COMMAND ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-endfunction()
-
-add_qml_test(tst_QmlImport)
-add_qml_test(tst_Button)
-add_qml_test(tst_TextField)
-add_qml_test(tst_ComboBox)
-add_qml_test(tst_TabBar)
-add_qml_test(tst_RangeSlider)
+qt_add_executable(tst_controls
+    main.cpp
+)
+target_link_libraries(tst_controls PRIVATE Qt6::QuickTest)
+target_compile_definitions(tst_controls PRIVATE
+    QUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+)
+add_test(NAME tst_controls COMMAND tst_controls)
