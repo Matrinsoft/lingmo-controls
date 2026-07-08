@@ -5,52 +5,97 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'
-  workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  test-gcc:
+    runs-on: ubuntu-24.04
+    container: debian:trixie
 
     steps:
+      - name: Install git
+        run: apt-get update -qq && apt-get install -y -qq git
+
       - uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq \
-            cmake ninja-build \
+          apt-get update -qq
+          apt-get install -y -qq \
+            cmake ninja-build g++ \
             qt6-base-dev qt6-declarative-dev qt6-quickcontrols2-dev \
-            xvfb libgl1-mesa-dev
+            libgl1-mesa-dev \
+            curl jq
 
-      - name: Build lingmo-theme
+      - name: Install lingmo-theme from latest release
         run: |
-          git clone --depth=1 https://github.com/LingmoOS/lingmo-theme.git
-          cmake -S lingmo-theme -B lingmo-theme/build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install \
+          curl -sL -o /tmp/lt-release.json \
+            https://api.github.com/repos/Matrinsoft/lingmo-theme/releases/latest
+          TAG=$(jq -r '.tag_name' /tmp/lt-release.json)
+          DEB_DEV_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme-dev[^"]*amd64.deb"' /tmp/lt-release.json | sed 's/.*":"//;s/"$//' | head -1)
+          DEB_LIB_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme1[^"]*amd64.deb"' /tmp/lt-release.json | grep -v dbgsym | sed 's/.*":"//;s/"$//' | head -1)
+          [ -z "$DEB_DEV_URL" ] && DEB_DEV_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme-dev_1.0.0_amd64.deb"
+          [ -z "$DEB_LIB_URL" ] && DEB_LIB_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme1_1.0.0_amd64.deb"
+          curl -sL -o /tmp/lingmo-theme-dev.deb "$DEB_DEV_URL"
+          curl -sL -o /tmp/lingmo-theme-lib.deb "$DEB_LIB_URL"
+          dpkg -i /tmp/lingmo-theme-lib.deb /tmp/lingmo-theme-dev.deb || apt-get install -f -y
+          rm -f /tmp/lingmo-theme-*.deb /tmp/lt-release.json
+
+      - name: Configure with tests
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTING=ON
-          cmake --build lingmo-theme/build
-          cmake --install lingmo-theme/build
 
-      - name: Configure & Build
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure --timeout 60
+
+  test-clang:
+    runs-on: ubuntu-24.04
+    container: debian:trixie
+
+    steps:
+      - name: Install git
+        run: apt-get update -qq && apt-get install -y -qq git
+
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
         run: |
-          cmake -S . -B build -G Ninja \
+          apt-get update -qq
+          apt-get install -y -qq \
+            cmake ninja-build clang++ libc++-dev \
+            qt6-base-dev qt6-declarative-dev qt6-quickcontrols2-dev \
+            libgl1-mesa-dev \
+            curl jq
+
+      - name: Install lingmo-theme from latest release
+        run: |
+          curl -sL -o /tmp/lt-release.json \
+            https://api.github.com/repos/Matrinsoft/lingmo-theme/releases/latest
+          TAG=$(jq -r '.tag_name' /tmp/lt-release.json)
+          DEB_DEV_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme-dev[^"]*amd64.deb"' /tmp/lt-release.json | sed 's/.*":"//;s/"$//' | head -1)
+          DEB_LIB_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme1[^"]*amd64.deb"' /tmp/lt-release.json | grep -v dbgsym | sed 's/.*":"//;s/"$//' | head -1)
+          [ -z "$DEB_DEV_URL" ] && DEB_DEV_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme-dev_1.0.0_amd64.deb"
+          [ -z "$DEB_LIB_URL" ] && DEB_LIB_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme1_1.0.0_amd64.deb"
+          curl -sL -o /tmp/lingmo-theme-dev.deb "$DEB_DEV_URL"
+          curl -sL -o /tmp/lingmo-theme-lib.deb "$DEB_LIB_URL"
+          dpkg -i /tmp/lingmo-theme-lib.deb /tmp/lingmo-theme-dev.deb || apt-get install -f -y
+          rm -f /tmp/lingmo-theme-*.deb /tmp/lt-release.json
+
+      - name: Configure with tests (clang)
+        run: |
+          cmake -B build \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/install \
+            -DCMAKE_CXX_COMPILER=clang++ \
             -DBUILD_TESTING=ON
-          cmake --build build
 
-      - name: Run Tests
-        run: |
-          cd build
-          xvfb-run ctest --output-on-failure --parallel 2
+      - name: Build
+        run: cmake --build build --parallel
 
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: build/Testing/
-          retention-days: 14
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure --timeout 60

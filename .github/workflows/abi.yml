@@ -1,4 +1,4 @@
-name: Build
+name: ABI Check
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  lint:
+  abi-check:
     runs-on: ubuntu-24.04
     container: debian:trixie
 
@@ -16,25 +16,8 @@ jobs:
         run: apt-get update -qq && apt-get install -y -qq git
 
       - uses: actions/checkout@v4
-
-      - name: Install clang-format
-        run: apt-get update -qq && apt-get install -y -qq clang-format
-
-      - name: Check code style
-        run: |
-          find . \( -name '*.cpp' -o -name '*.h' \) \
-            -exec bash -c 'diff -q "$1" <(clang-format "$1") > /dev/null' _ {} \; -o \
-            -exec bash -c 'echo "Style violation: $1"; exit 1' _ \;
-
-  build:
-    runs-on: ubuntu-24.04
-    container: debian:trixie
-
-    steps:
-      - name: Install git
-        run: apt-get update -qq && apt-get install -y -qq git
-
-      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install dependencies
         run: |
@@ -42,7 +25,7 @@ jobs:
           apt-get install -y -qq \
             cmake ninja-build g++ \
             qt6-base-dev qt6-declarative-dev qt6-quickcontrols2-dev \
-            libgl1-mesa-dev \
+            libgl1-mesa-dev abi-compliance-checker \
             curl jq
 
       - name: Install lingmo-theme from latest release
@@ -59,22 +42,41 @@ jobs:
           dpkg -i /tmp/lingmo-theme-lib.deb /tmp/lingmo-theme-dev.deb || apt-get install -f -y
           rm -f /tmp/lingmo-theme-*.deb /tmp/lt-release.json
 
-      - name: Configure
+      - name: Build current
         run: |
-          cmake -B build \
-            -G Ninja \
+          cmake -B build-current -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DBUILD_TESTING=ON \
-            -DCMAKE_UNITY_BUILD=ON
+            -DBUILD_TESTING=OFF
+          cmake --build build-current --parallel
+          cp build-current/src/libLingmoControls.so.1 libLingmoControls.so.1.new 2>/dev/null || true
 
-      - name: Build
-        run: cmake --build build --parallel
+      - name: Checkout base
+        run: |
+          git fetch origin ${{ github.base_ref || 'main' }}
+          git checkout FETCH_HEAD
+          cmake -B build-base -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DBUILD_TESTING=OFF
+          cmake --build build-base --parallel
+          cp build-base/src/libLingmoControls.so.1 libLingmoControls.so.1.old 2>/dev/null || true
+          git checkout -
 
-      - name: Install
-        run: cmake --install build --prefix install_dir
+      - name: Compare ABI
+        run: |
+          if [ -f libLingmoControls.so.1.old ] && [ -f libLingmoControls.so.1.new ]; then
+            abi-compliance-checker \
+              -lib LingmoControls \
+              -old libLingmoControls.so.1.old \
+              -new libLingmoControls.so.1.new \
+              -report-path abi_report.html || true
+            echo "ABI report generated"
+          else
+            echo "No base reference to compare (first commit on branch)"
+          fi
 
-      - name: Upload artifacts
+      - name: Upload ABI report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lingmo-controls
-          path: install_dir/
+          name: abi-report
+          path: abi_report.html

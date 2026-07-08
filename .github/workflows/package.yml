@@ -1,69 +1,102 @@
 name: Package
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  package:
-    strategy:
-      matrix:
-        distro: [ubuntu-24.04, ubuntu-24.04-arm64]
-      fail-fast: false
-
-    runs-on: ${{ matrix.distro }}
+  deb:
+    runs-on: ubuntu-24.04
+    container: debian:trixie
 
     steps:
+      - name: Install git
+        run: apt-get update -qq && apt-get install -y -qq git
+
       - uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq \
-            cmake ninja-build \
+          apt-get update -qq
+          apt-get install -y -qq \
+            build-essential cmake debhelper dpkg-dev \
             qt6-base-dev qt6-declarative-dev qt6-quickcontrols2-dev \
             libgl1-mesa-dev \
-            build-essential debhelper dpkg-dev
+            curl jq
 
-      - name: Build lingmo-theme
+      - name: Install lingmo-theme from latest release
         run: |
-          git clone --depth=1 https://github.com/LingmoOS/lingmo-theme.git
-          cmake -S lingmo-theme -B lingmo-theme/build -G Ninja \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_INSTALL_PREFIX=/usr
-          sudo cmake --build lingmo-theme/build
-          sudo cmake --install lingmo-theme/build
+          curl -sL -o /tmp/lt-release.json \
+            https://api.github.com/repos/Matrinsoft/lingmo-theme/releases/latest
+          TAG=$(jq -r '.tag_name' /tmp/lt-release.json)
+          DEB_DEV_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme-dev[^"]*amd64.deb"' /tmp/lt-release.json | sed 's/.*":"//;s/"$//' | head -1)
+          DEB_LIB_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme1[^"]*amd64.deb"' /tmp/lt-release.json | grep -v dbgsym | sed 's/.*":"//;s/"$//' | head -1)
+          [ -z "$DEB_DEV_URL" ] && DEB_DEV_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme-dev_1.0.0_amd64.deb"
+          [ -z "$DEB_LIB_URL" ] && DEB_LIB_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme1_1.0.0_amd64.deb"
+          curl -sL -o /tmp/lingmo-theme-dev.deb "$DEB_DEV_URL"
+          curl -sL -o /tmp/lingmo-theme-lib.deb "$DEB_LIB_URL"
+          dpkg -i /tmp/lingmo-theme-lib.deb /tmp/lingmo-theme-dev.deb || apt-get install -f -y
+          rm -f /tmp/lingmo-theme-*.deb /tmp/lt-release.json
 
-      - name: Build Package
+      - name: Build Debian package
         run: |
-          mkdir -p build && cd build
-          cmake .. -G Ninja \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_INSTALL_PREFIX=/usr \
-            -DBUILD_TESTING=ON
-          ninja
-          DESTDIR=${{ github.workspace }}/package-root ninja install
+          dpkg-buildpackage -us -uc -b
+          mkdir -p artifacts
+          mv ../*.deb ../*.buildinfo ../*.changes artifacts/ 2>/dev/null || true
 
-      - name: Create Archive
-        run: |
-          cd ${{ github.workspace }}/package-root
-          tar -czf ${{ github.workspace }}/lingmo-controls-${{ matrix.distro }}.tar.gz .
-
-      - name: Upload Package Artifact
+      - name: Upload .deb
         uses: actions/upload-artifact@v4
         with:
-          name: package-${{ matrix.distro }}
-          path: lingmo-controls-${{ matrix.distro }}.tar.gz
-          retention-days: 30
+          name: lingmo-controls-deb
+          path: artifacts/
 
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  rpm:
+    runs-on: ubuntu-24.04
+    container: fedora:44
+
+    steps:
+      - name: Install git
+        run: dnf install -y git
+
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          dnf install -y cmake ninja-build rpm-build \
+            qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtquickcontrols2-devel \
+            mesa-libGL-devel \
+            curl jq
+
+      - name: Install lingmo-theme from latest release
+        run: |
+          curl -sL -o /tmp/lt-release.json \
+            https://api.github.com/repos/Matrinsoft/lingmo-theme/releases/latest
+          TAG=$(jq -r '.tag_name' /tmp/lt-release.json)
+          RPM_DEVEL_URL=$(grep -o '"browser_download_url":"[^"]*lingmo-theme-devel[^"]*\.rpm"' /tmp/lt-release.json | grep -v debug | sed 's/.*":"//;s/"$//' | head -1)
+          RPM_LIBS_URL=$(grep -o '"browser_download_url":"[^"]*lingmo-theme-libs[^"]*\.rpm"' /tmp/lt-release.json | grep -v debug | sed 's/.*":"//;s/"$//' | head -1)
+          [ -z "$RPM_DEVEL_URL" ] && RPM_DEVEL_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/lingmo-theme-devel-1.0.0-1.fc44.x86_64.rpm"
+          [ -z "$RPM_LIBS_URL" ] && RPM_LIBS_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/lingmo-theme-libs-1.0.0-1.fc44.x86_64.rpm"
+          curl -sL -o /tmp/lingmo-theme-devel.rpm "$RPM_DEVEL_URL"
+          curl -sL -o /tmp/lingmo-theme-libs.rpm "$RPM_LIBS_URL"
+          dnf install -y /tmp/lingmo-theme-libs.rpm /tmp/lingmo-theme-devel.rpm
+          rm -f /tmp/lingmo-theme-*.rpm /tmp/lt-release.json
+
+      - name: Build RPM
+        run: |
+          mkdir -p /tmp/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cd .. && tar czf /tmp/rpmbuild/SOURCES/lingmo-controls-1.0.0.tar.gz \
+            --transform='s,^lingmo-controls,lingmo-controls-1.0.0,' \
+            lingmo-controls
+          cd lingmo-controls
+          cp rpm/lingmo-controls.spec /tmp/rpmbuild/SPECS/
+          rpmbuild -ba /tmp/rpmbuild/SPECS/lingmo-controls.spec \
+            --define "_topdir /tmp/rpmbuild"
+          mkdir -p artifacts
+          cp /tmp/rpmbuild/RPMS/**/*.rpm artifacts/ 2>/dev/null || true
+
+      - name: Upload .rpm
+        uses: actions/upload-artifact@v4
         with:
-          files: lingmo-controls-${{ matrix.distro }}.tar.gz
-          generate_release_notes: true
+          name: lingmo-controls-rpm
+          path: artifacts/
