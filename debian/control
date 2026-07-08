@@ -6,7 +6,7 @@ Build-Depends: debhelper-compat (= 13),
                cmake (>= 3.21),
                qt6-base-dev (>= 6.5),
                qt6-declarative-dev (>= 6.5),
-               lingmo-theme-dev (>= 1.0.0)
+               liblingmotheme-dev (>= 1.0.0)
 Standards-Version: 4.6.2
 Homepage: https://lingmo.org
 Rules-Requires-Root: no

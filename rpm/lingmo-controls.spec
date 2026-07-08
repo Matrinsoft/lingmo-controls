@@ -8,7 +8,7 @@ Summary:       Lingmo Desktop QML Controls Library
 
 License:       LGPL-2.1-or-later
 URL:           https://lingmo.org
-Source0:       %{name}-%{version}.tar.xz
+Source0:       %{name}-%{version}.tar.gz
 
 BuildRequires: cmake >= 3.21
 BuildRequires: qt6-qtbase-devel >= 6.5
@@ -25,7 +25,7 @@ and ToolButton components.
 
 %package -n qml6-lingmo-controls
 Summary:       QML6 bindings for Lingmo.Controls
-Requires:      qml6-lingmo-theme >= 1.0.0
+Requires:      lingmo-theme-qml >= 1.0.0
 %description -n qml6-lingmo-controls
 QML6 module providing Lingmo.Controls backed by Lingmo.Theme design tokens.
 
