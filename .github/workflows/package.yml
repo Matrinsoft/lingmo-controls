@@ -21,7 +21,7 @@ jobs:
           apt-get update -qq
           apt-get install -y -qq \
             build-essential cmake debhelper dpkg-dev \
-            qt6-base-dev qt6-declarative-dev qt6-quickcontrols2-dev \
+            qt6-base-dev qt6-declarative-dev \
             libgl1-mesa-dev \
             curl jq
 
@@ -64,7 +64,7 @@ jobs:
       - name: Install dependencies
         run: |
           dnf install -y cmake ninja-build rpm-build \
-            qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtquickcontrols2-devel \
+            qt6-qtbase-devel qt6-qtdeclarative-devel \
             mesa-libGL-devel \
             curl jq
 

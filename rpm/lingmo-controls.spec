@@ -13,7 +13,7 @@ Source0:       %{name}-%{version}.tar.xz
 BuildRequires: cmake >= 3.21
 BuildRequires: qt6-qtbase-devel >= 6.5
 BuildRequires: qt6-qtdeclarative-devel >= 6.5
-BuildRequires: qt6-qtquickcontrols2-devel >= 6.5
+
 BuildRequires: lingmo-theme-devel >= 1.0.0
 BuildRequires: gcc-c++
 
