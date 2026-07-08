@@ -1,3 +1,6 @@
+set(CMAKE_AUTOMOC ON)
+qt_policy(SET QTP0001 NEW)
+
 set(module_name LingmoControls)
 
 set(public_headers
@@ -42,8 +45,6 @@ qt_add_qml_module(${module_name}
         ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/Tumbler.qml
     SOURCES
         ${sources}
-    OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml/Lingmo/Controls"
-    INSTALL_DIRECTORY "${CMAKE_INSTALL_LIBDIR}/qt6/qml/Lingmo/Controls"
 )
 
 target_include_directories(${module_name}
@@ -66,10 +67,26 @@ target_link_libraries(${module_name}
 set_target_properties(${module_name} PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN ON
-    AUTOMOC ON
     AUTOMOC_MOC_NAMESPACE Lingmo
     DEFINE_SYMBOL LINGMOCONTROLS_LIBRARY
-    INSTALL_COMPONENT runtime
+)
+
+install(TARGETS ${module_name}
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/Lingmo/Controls
+    COMPONENT runtime
+)
+
+install(
+    FILES ${CMAKE_SOURCE_DIR}/qml/Lingmo/Controls/qmldir
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/Lingmo/Controls
+    COMPONENT runtime
+)
+
+install(
+    FILES
+        ${CMAKE_SOURCE_DIR}/include/LingmoControls/LingmoControls.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/LingmoControls
+    COMPONENT devel
 )
 
 configure_file(
@@ -87,14 +104,6 @@ install(
         "${CMAKE_BINARY_DIR}/include/LingmoControls/LingmoControlsExport.h"
         "${CMAKE_BINARY_DIR}/include/LingmoControls/LingmoControlsVersion.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/LingmoControls
-    COMPONENT devel
-)
-
-install(
-    DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING
-        PATTERN "*.h"
     COMPONENT devel
 )
 
