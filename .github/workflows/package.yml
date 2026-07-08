@@ -22,22 +22,18 @@ jobs:
           apt-get install -y -qq \
             build-essential cmake debhelper dpkg-dev \
             qt6-base-dev qt6-declarative-dev \
-            libgl1-mesa-dev \
-            curl jq
+            libgl1-mesa-dev
 
-      - name: Install lingmo-theme from latest release
+      - name: Build and install lingmo-theme
         run: |
-          curl -sL -o /tmp/lt-release.json \
-            https://api.github.com/repos/Matrinsoft/lingmo-theme/releases/latest
-          TAG=$(jq -r '.tag_name' /tmp/lt-release.json)
-          DEB_DEV_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme-dev[^"]*amd64.deb"' /tmp/lt-release.json | sed 's/.*":"//;s/"$//' | head -1)
-          DEB_LIB_URL=$(grep -o '"browser_download_url":"[^"]*liblingmotheme1[^"]*amd64.deb"' /tmp/lt-release.json | grep -v dbgsym | sed 's/.*":"//;s/"$//' | head -1)
-          [ -z "$DEB_DEV_URL" ] && DEB_DEV_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme-dev_1.0.0_amd64.deb"
-          [ -z "$DEB_LIB_URL" ] && DEB_LIB_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/liblingmotheme1_1.0.0_amd64.deb"
-          curl -sL -o /tmp/lingmo-theme-dev.deb "$DEB_DEV_URL"
-          curl -sL -o /tmp/lingmo-theme-lib.deb "$DEB_LIB_URL"
-          dpkg -i /tmp/lingmo-theme-lib.deb /tmp/lingmo-theme-dev.deb || apt-get install -f -y
-          rm -f /tmp/lingmo-theme-*.deb /tmp/lt-release.json
+          git clone --depth=1 https://github.com/Matrinsoft/lingmo-theme.git /tmp/lingmo-theme
+          cmake -S /tmp/lingmo-theme -B /tmp/lingmo-theme/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBUILD_TESTING=OFF
+          cmake --build /tmp/lingmo-theme/build --parallel
+          cmake --install /tmp/lingmo-theme/build
+          rm -rf /tmp/lingmo-theme
 
       - name: Build Debian package
         run: |
@@ -65,22 +61,19 @@ jobs:
         run: |
           dnf install -y cmake ninja-build rpm-build \
             qt6-qtbase-devel qt6-qtdeclarative-devel \
-            mesa-libGL-devel \
-            curl jq
+            mesa-libGL-devel
 
-      - name: Install lingmo-theme from latest release
+      - name: Build and install lingmo-theme
         run: |
-          curl -sL -o /tmp/lt-release.json \
-            https://api.github.com/repos/Matrinsoft/lingmo-theme/releases/latest
-          TAG=$(jq -r '.tag_name' /tmp/lt-release.json)
-          RPM_DEVEL_URL=$(grep -o '"browser_download_url":"[^"]*lingmo-theme-devel[^"]*\.rpm"' /tmp/lt-release.json | grep -v debug | sed 's/.*":"//;s/"$//' | head -1)
-          RPM_LIBS_URL=$(grep -o '"browser_download_url":"[^"]*lingmo-theme-libs[^"]*\.rpm"' /tmp/lt-release.json | grep -v debug | sed 's/.*":"//;s/"$//' | head -1)
-          [ -z "$RPM_DEVEL_URL" ] && RPM_DEVEL_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/lingmo-theme-devel-1.0.0-1.fc44.x86_64.rpm"
-          [ -z "$RPM_LIBS_URL" ] && RPM_LIBS_URL="https://github.com/Matrinsoft/lingmo-theme/releases/download/${TAG}/lingmo-theme-libs-1.0.0-1.fc44.x86_64.rpm"
-          curl -sL -o /tmp/lingmo-theme-devel.rpm "$RPM_DEVEL_URL"
-          curl -sL -o /tmp/lingmo-theme-libs.rpm "$RPM_LIBS_URL"
-          dnf install -y /tmp/lingmo-theme-libs.rpm /tmp/lingmo-theme-devel.rpm
-          rm -f /tmp/lingmo-theme-*.rpm /tmp/lt-release.json
+          dnf install -y git
+          git clone --depth=1 https://github.com/Matrinsoft/lingmo-theme.git /tmp/lingmo-theme
+          cmake -S /tmp/lingmo-theme -B /tmp/lingmo-theme/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBUILD_TESTING=OFF
+          cmake --build /tmp/lingmo-theme/build --parallel
+          cmake --install /tmp/lingmo-theme/build
+          rm -rf /tmp/lingmo-theme
 
       - name: Build RPM
         run: |

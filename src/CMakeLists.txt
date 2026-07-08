@@ -82,6 +82,7 @@ set_target_properties(${module_name} PROPERTIES
 )
 
 install(TARGETS ${module_name}
+    EXPORT ${module_name}Targets
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/Lingmo/Controls
     COMPONENT runtime
 )
